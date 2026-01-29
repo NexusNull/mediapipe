@@ -15,6 +15,11 @@ build --jobs 128
 build --define='absl=1'  # for gtest
 build --enable_platform_specific_config
 
+build --define xnn_enable_avx512amx=false
+build --define xnn_enable_avxvnniint8=false
+build --define xnn_enable_avxvnni=false
+build --define xnn_enable_avx512fp16=false
+
 # Enable stack traces
 test --test_env="GTEST_INSTALL_FAILURE_SIGNAL_HANDLER=1"
 
