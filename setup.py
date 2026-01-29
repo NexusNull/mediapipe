@@ -520,7 +520,7 @@ class Restore(setuptools.Command):
 
 setuptools.setup(
     name='mediapipe',
-    version=__version__,
+    version="10.0.1",
     url='https://github.com/google/mediapipe',
     description='MediaPipe is the simplest way for researchers and developers to build world-class ML solutions and applications for mobile, edge, cloud and the web.',
     author='The MediaPipe Authors',
