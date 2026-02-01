@@ -90,6 +90,7 @@ RUN wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-8/g++-8_8.4.0-3ubu
 RUN sudo apt install -y ./libstdc++-8-dev_8.4.0-3ubuntu2_amd64.deb ./g++-8_8.4.0-3ubuntu2_amd64.deb
 COPY . /mediapipe/
 RUN bash setup_opencv.sh
+RUN CC=clang CXX=clang++ bazel build -c opt --cxxopt=-std=c++20 --define MEDIAPIPE_DISABLE_GPU=1 mediapipe/examples/desktop/holistic_tracking:holistic_tracking_cpu
 
 
 # If we want the docker image to contain the pre-built object_detection_offline_demo binary, do the following

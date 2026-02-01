@@ -19,6 +19,35 @@ package(default_visibility = [
 ])
 
 cc_library(
+    name = "tcp_server_graph_main",
+    srcs = [
+      "tcp_server_graph_main.cc",
+      "TCPServer.cpp"
+      ],
+    hdrs = ["TCPServer.h"],
+    deps = [
+        "//mediapipe/util:render_data_cc_proto",
+        "//mediapipe/framework/port:integral_types",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:image_frame_opencv",
+        "//mediapipe/framework/port:opencv_highgui",
+        "//mediapipe/framework/port:file_helpers",
+        "//mediapipe/framework/port:map_util",
+        "//mediapipe/framework/port:parse_text_proto",
+        "//mediapipe/framework/port:opencv_imgproc",
+        "//mediapipe/framework/port:opencv_video",
+        "//mediapipe/framework/port:ret_check",
+        "//mediapipe/framework/port:status",
+        "//mediapipe/framework/port:statusor",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
     name = "simple_run_graph_main",
     srcs = ["simple_run_graph_main.cc"],
     deps = [
