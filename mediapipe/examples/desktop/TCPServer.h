@@ -22,7 +22,7 @@ public:
   ~TCPServer();
   bool start();
   void run();
-  void sendmsg(const std::string& message);
+  void sendmsg(const char* buffer, size_t size);
   void stop();
 };
 

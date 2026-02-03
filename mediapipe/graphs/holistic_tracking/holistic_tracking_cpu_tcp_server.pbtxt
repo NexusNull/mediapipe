@@ -1,10 +1,10 @@
 # Tracks and renders pose + hands + face landmarks.
 
-# CPU image. (ImageFrame)
-input_stream: "input_video"
+# CPU image. (mediapipe::Image)
+input_stream: "input_image"
 
 # CPU image with rendered results. (ImageFrame)
-output_stream: "output_data_vector"
+output_stream: "face_blendshapes"
 
 
 
@@ -19,52 +19,138 @@ output_stream: "output_data_vector"
 # e.g., the output produced by a node may get dropped downstream if the
 # subsequent nodes are still busy processing previous inputs.
 
+#node {
+#  calculator: "FlowLimiterCalculator"
+#  input_stream: "input_video"
+#  input_stream: "FINISHED:face_landmarks"
+#  input_stream_info: {
+#    tag_index: "FINISHED"
+#    back_edge: true
+#  }
+#  output_stream: "throttled_input_video"
+#  node_options: {
+#    [type.googleapis.com/mediapipe.FlowLimiterCalculatorOptions] {
+#      max_in_flight: 1
+#      max_in_queue: 1
+#      # Timeout is disabled (set to 0) as first frame processing can take more
+#      # than 1 second.
+#      in_flight_timeout: 0
+#    }
+#  }
+#}
+
 node {
-  calculator: "FlowLimiterCalculator"
-  input_stream: "input_video"
-  input_stream: "FINISHED:output_data_vector"
-  input_stream_info: {
-    tag_index: "FINISHED"
-    back_edge: true
-  }
-  output_stream: "throttled_input_video"
-  node_options: {
-    [type.googleapis.com/mediapipe.FlowLimiterCalculatorOptions] {
-      max_in_flight: 1
-      max_in_queue: 1
-      # Timeout is disabled (set to 0) as first frame processing can take more
-      # than 1 second.
-      in_flight_timeout: 0
+  calculator: "mediapipe.tasks.vision.face_landmarker.FaceLandmarkerGraph"
+  input_stream: "IMAGE:input_image"
+  #input_stream: "NORM_RECT:norm_rect"
+  #output_stream: "NORM_LANDMARKS:face_landmarks"
+  output_stream: "BLENDSHAPES:face_blendshapes"
+  #output_stream: "FACE_GEOMETRY:face_geometry"
+  #output_stream: "FACE_RECTS_NEXT_FRAME:face_rects_next_frame"
+  #output_stream: "FACE_RECTS:face_rects"
+  #output_stream: "DETECTIONS:detections"
+  #output_stream: "IMAGE:image_out"
+  options {
+    [mediapipe.tasks.vision.face_landmarker.proto.FaceLandmarkerGraphOptions.ext]
+    {
+      #base_options {
+      #   model_asset {
+      #     file_name: "face_landmarker.task"
+      #   }
+      #}
+      base_options {
+        model_asset {
+          file_name: "face_landmarker_v2_with_blendshapes.task"
+        }
+        use_stream_mode: true
+      }
+      face_detector_graph_options {
+        min_detection_confidence: 0.5
+        num_faces: 1
+      }
+      face_landmarks_detector_graph_options {
+        min_detection_confidence: 0.5
+        #face_blendshapes_graph_options: {
+        #  base_options {
+        #    model_asset {
+        #      file_name: "face_landmarker_v2_with_blendshapes.task"
+        #    }
+        #  }
+        #}
+      }
     }
   }
 }
+# I want to understand what a calculator is!
+# we know that the pbtxt files that define type are calculators. The question is can c++ files also be considered calculators(they prolly can but how is the real question)
+#node {
+#  calculator: "mediapipe.tasks.vision.face_landmarker.FaceLandmarkerGraph"
+#  input_stream: "IMAGE:image_in"
+#  output_stream: "NORM_LANDMARKS:face_landmarks"
+#  options {
+#    [mediapipe.tasks.vision.face_landmarker.proto.FaceLandmarkerGraphOptions.ext] {
+#      base_options {
+#        model_asset {
+#          file_name: "mediapipe/tasks/testdata/vision/face_landmarker_v2_with_blendshapes.task"
+#        }
+#        use_stream_mode: true
+#      }
+#      face_detector_graph_options { num_faces: 1 }
+#    }
+#  }
+#}
 
-node {
-  calculator: "HolisticLandmarkCpu"
-  input_stream: "IMAGE:throttled_input_video"
-  output_stream: "POSE_LANDMARKS:pose_landmarks"
-  output_stream: "POSE_ROI:pose_roi"
-  output_stream: "POSE_DETECTION:pose_detection"
-  output_stream: "FACE_LANDMARKS:face_landmarks"
-  output_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
-  output_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
-}
+#node {
+#  calculator: "ConstantSidePacketCalculator"
+#  output_side_packet: "PACKET:refine_face_landmarks"
+#  node_options: {
+#    [type.googleapis.com/mediapipe.ConstantSidePacketCalculatorOptions]: {
+#      packet { bool_value: true }
+#    }
+#  }
+#}
+
+#node {
+#  name: "mediapipe_tasks_vision_face_landmarker_faceblendshapesgraph__LandmarksToTensorCalculator"
+#  calculator: "LandmarksToTensorCalculator"
+#  input_stream: "IMAGE_SIZE:image_size"
+#  input_stream: "NORM_LANDMARKS:mediapipe_tasks_vision_face_landmarker_faceblendshapesgraph____stream_2"
+#  output_stream: "TENSORS:mediapipe_tasks_vision_face_landmarker_faceblendshapesgraph____stream_3"
+#  options {
+#    [mediapipe.LandmarksToTensorCalculatorOptions.ext] {
+#      attributes: X
+#      attributes: Y
+#      flatten: false
+#    }
+#  }
+#}
+#node {
+#  calculator: "HolisticLandmarkCpu"
+#  input_stream: "IMAGE:throttled_input_video"
+#  input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
+#  output_stream: "POSE_LANDMARKS:pose_landmarks"
+#  output_stream: "POSE_ROI:pose_roi"
+#  output_stream: "POSE_DETECTION:pose_detection"
+#  output_stream: "FACE_LANDMARKS:face_landmarks"
+#  output_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
+#  output_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
+#}
 
 # Gets image size.
-node {
-  calculator: "ImagePropertiesCalculator"
-  input_stream: "IMAGE:throttled_input_video"
-  output_stream: "SIZE:image_size"
-}
+#node {
+#  calculator: "ImagePropertiesCalculator"
+#  input_stream: "IMAGE:throttled_input_video"
+#  output_stream: "SIZE:image_size"
+#}
 
 # Converts pose, hands and face landmarks to a render data vector.
-node {
-  calculator: "HolisticTrackingToRenderData"
-  input_stream: "IMAGE_SIZE:image_size"
-  input_stream: "POSE_LANDMARKS:pose_landmarks"
-  input_stream: "POSE_ROI:pose_roi"
-  input_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
-  input_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
-  input_stream: "FACE_LANDMARKS:face_landmarks"
-  output_stream: "RENDER_DATA_VECTOR:output_data_vector"
-}
+#node {
+#  calculator:   "HolisticTrackingToRenderData"
+#  input_stream: "IMAGE_SIZE:image_size"
+#  input_stream: "POSE_LANDMARKS:pose_landmarks"
+#  input_stream: "POSE_ROI:pose_roi"
+#  input_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
+#  input_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
+#  input_stream: "FACE_LANDMARKS:face_landmarks"
+#  output_stream: "RENDER_DATA_VECTOR:output_data_vector"
+#}

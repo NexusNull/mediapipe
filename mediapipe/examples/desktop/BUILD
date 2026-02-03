@@ -25,8 +25,14 @@ cc_library(
       "TCPServer.cpp"
       ],
     hdrs = ["TCPServer.h"],
+    data = [
+        "//mediapipe/graphs/face_mesh:face_mesh_mobile_gpu.binarypb",
+        "//mediapipe/modules/face_detection:face_detection_short_range.tflite",
+        "//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
+    ],
     deps = [
         "//mediapipe/util:render_data_cc_proto",
+        "//mediapipe/util:pose_util",
         "//mediapipe/framework/port:integral_types",
         "//mediapipe/framework:calculator_framework",
         "//mediapipe/framework/formats:image_frame",
@@ -40,6 +46,9 @@ cc_library(
         "//mediapipe/framework/port:ret_check",
         "//mediapipe/framework/port:status",
         "//mediapipe/framework/port:statusor",
+#        "//mediapipe/tasks/cc/vision/face_landmarker:face_blendshapes_graph", disabled because of visibility
+        "//mediapipe/tasks/cc/vision/face_landmarker:face_landmarker",
+#        "//mediapipe/tasks/cc/vision/face_detector/proto:face_detector_graph_options_cc_proto", disabled because of visibility
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:absl_log",

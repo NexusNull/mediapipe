@@ -17,6 +17,13 @@ http_archive(
     ],
 )
 
+http_archive(
+    name = "hedron_compile_commands",
+    sha256 = "...",
+    strip_prefix = "bazel-compile-commands-<version>",
+    urls = ["https://github.com/hedronvision/bazel-compile-commands/archive/<version>.tar.gz"],
+)
+
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()

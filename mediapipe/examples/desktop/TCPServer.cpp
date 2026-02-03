@@ -39,7 +39,8 @@ bool TCPServer::start()
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(PORT);
   server_addr.sin_addr.s_addr = INADDR_ANY;
-
+  int opt = 1;
+  setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
   // Bind socket
   if (bind(listening_socket, (sockaddr *)&server_addr, sizeof(server_addr)) == -1)
   {
@@ -104,7 +105,7 @@ void TCPServer::run()
   }
 }
 
-void TCPServer::sendmsg(const std::string &message)
+void TCPServer::sendmsg(const char* buffer, const size_t size)
 {
   std::lock_guard<std::mutex> lock(client_mutex);
   for (auto elem = client_connections.begin(); elem != client_connections.end();)
@@ -112,9 +113,9 @@ void TCPServer::sendmsg(const std::string &message)
     int client_connection = *elem;
     ssize_t total = 0;
     bool failed_sent = false;
-    while (total < message.size())
+    while (total < size)
     {
-      ssize_t sent = send(client_connection, message.data() + total, message.size() - total, MSG_NOSIGNAL);
+      ssize_t sent = send(client_connection, buffer + total, size - total, MSG_NOSIGNAL);
       if (sent <= 0)
       {
         close(client_connection);
@@ -138,7 +139,7 @@ void TCPServer::stop()
     return;
 
   running = false;
-
+  std::cout << '\n' << "Socket closing";
   // Close listening socket to interrupt accept()
   if (listening_socket != -1)
   {
@@ -146,6 +147,10 @@ void TCPServer::stop()
     close(listening_socket);
     listening_socket = -1;
   }
-
+  std::lock_guard<std::mutex> lock(client_mutex);
+  for (auto elem : client_connections)
+  {
+    close(elem);
+  }
   std::cout << "Server stopped." << std::endl;
 }
