@@ -168,7 +168,6 @@ absl::Status RunMPPGraph()
     camera_frame.copyTo(input_frame_mat);
 
     auto input_image = absl::make_unique<mediapipe::Image>(input_frame);
-
     // Send image packet into the graph.
     size_t frame_timestamp_us =
       (double)cv::getTickCount() / (double)cv::getTickFrequency() * 1e6;
@@ -177,27 +176,33 @@ absl::Status RunMPPGraph()
       .At(mediapipe::Timestamp(frame_timestamp_us))));
     // Get the graph result packet, or stop if that fails.
     mediapipe::Packet packet;
-    if (!poller.Next(&packet)) break;
-    auto& classifications = packet.Get<std::vector<mediapipe::ClassificationList>>();
-    auto& classification = classifications[0];
-    //std::cout << classification.DebugString() << std::endl;
-
-    size_t size = classification.classification_size() * sizeof(float);
-    char buffer[sizeof(size_t) + size];
-    char* cursor = buffer;
-
-    memcpy(cursor, &size, sizeof(size_t));
-    cursor += sizeof(size_t);
-
-    for(int i = 0; i< classification.classification_size();i++)
+    std::cout << "before" << std::endl;
+    std::cout << poller.QueueSize() << std::endl;
+    if(poller.QueueSize() > 0)
     {
-      float score = classification.classification(i).score();
-      memcpy(cursor, &score, sizeof(float));
-      cursor += sizeof(float);
-    }
-    server.sendmsg(buffer, size + sizeof(size_t));
-  }
+      if (!poller.Next(&packet)) break;
+      std::cout << "after" << std::endl;
+      auto& classifications = packet.Get<std::vector<mediapipe::ClassificationList>>();
+      auto& classification = classifications[0];
+      //std::cout << classification.DebugString() << std::endl;
 
+      size_t size = classification.classification_size() * sizeof(float);
+      char buffer[sizeof(size_t) + size];
+      char* cursor = buffer;
+
+      memcpy(cursor, &size, sizeof(size_t));
+      cursor += sizeof(size_t);
+
+      for(int i = 0; i< classification.classification_size();i++)
+      {
+        float score = classification.classification(i).score();
+        memcpy(cursor, &score, sizeof(float));
+        cursor += sizeof(float);
+      }
+      server.sendmsg(buffer, size + sizeof(size_t));
+    }
+  }
+  std::cout << "shuttingdown" << std::endl;
   ABSL_LOG(INFO) << "Shutting down.";
   server.stop();
   if (server_thread.joinable())
